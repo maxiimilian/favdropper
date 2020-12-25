@@ -1,0 +1,5 @@
+[Desktop Entry]
+Name=FavDropper
+Exec=/home/maximilian/Projekte/favdropper/favdropper_run.sh
+Type=Application
+Categories=Utility
