@@ -3,19 +3,26 @@ from typing import List
 import os
 from PyQt5 import QtGui, QtCore
 from PyQt5.QtWidgets import (
-    QApplication, QWidget,
-    QHBoxLayout, QVBoxLayout,
-    QPushButton, QLineEdit, QLabel,
-    QFileDialog, QPlainTextEdit
+    QApplication,
+    QWidget,
+    QHBoxLayout,
+    QVBoxLayout,
+    QPushButton,
+    QLineEdit,
+    QPlainTextEdit,
+    QLabel,
+    QFileDialog,
 )
 
 
 class FavDropperMain(QWidget):
     def __init__(self):
         super().__init__()
-        self.init_ui()
 
         self._target_directory: QtCore.QUrl = QtCore.QUrl("")
+
+        self.setAcceptDrops(True)
+        self.init_ui()
 
     def dragEnterEvent(self, e: QtGui.QDragEnterEvent) -> None:
         if e.mimeData().hasUrls():
@@ -24,12 +31,21 @@ class FavDropperMain(QWidget):
             e.ignore()
 
     def dropEvent(self, e: QtGui.QDropEvent) -> None:
+        # Filter local files (i.e. file:///)
         urls = [
             u
             for u in e.mimeData().urls()
             if u.isLocalFile()
         ]
-        self.link_urls(urls)
+
+        if len(urls) > 0:
+            # If target dir not yet set, use input for that
+            if self.target_directory.path() == "":
+                target_directory = urls[0]
+                if os.path.isdir(target_directory.path()):
+                    self.target_directory = target_directory
+            else:
+                self.link_urls(urls)
 
     @property
     def target_directory(self) -> QtCore.QUrl:
@@ -42,7 +58,6 @@ class FavDropperMain(QWidget):
         self._log.appendPlainText(
             "Target directory selected."
         )
-        self.setAcceptDrops(True)
 
     def init_ui(self):
         # Set up controls
@@ -90,7 +105,6 @@ class FavDropperMain(QWidget):
             self.target_directory = dlg.selectedUrls()[0]
 
     def link_urls(self, urls: List[QtCore.QUrl]) -> None:
-        #todo: Check if target dir
         for u in urls:
             rel_u = os.path.relpath(
                 u.path(),
